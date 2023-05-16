@@ -1,0 +1,46 @@
+#text-principal {
+  color: #ffffff;
+  font-family: 'Raleway',sans-serif;
+  font-size: 62px; font-weight: 800;
+  line-height: 72px; margin: 0 0 24px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.cards {
+  background-color: #1a1d20;
+  box-sizing: border-box;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+  
+.cards:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16), 0 4px 10px rgba(0, 0, 0, 0.23);
+}
+
+.shadow-top {
+  box-shadow: 0 -0.5rem 1rem rgba(0,0,0,.15);
+}
+
+.card-img-top {
+  height: 200px;
+  object-fit: cover;
+}
+
+#myBtn {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  z-index: 99;
+  border: none;
+  outline: none;
+  color: white;
+  cursor: pointer;
+  padding: 15px;
+  border-radius: 10px;
+  font-size: 18px;
+}
+
+#myBtn:hover {
+  background-color: #555;
+}
