@@ -7,6 +7,15 @@
   text-transform: uppercase;
 }
 
+.logo{
+  height: 3rem;
+}
+
+i{
+  display: flex;
+  justify-content: center;
+}
+
 .cards {
   background-color: #1a1d20;
   box-sizing: border-box;
@@ -26,10 +35,21 @@
   object-fit: cover;
 }
 
+footer{
+  position: fixed;
+  bottom: 0;
+  left:0;
+  width: 100%;
+}
+
+.content{
+  height: 3rem;
+}
+
 #myBtn {
   display: none;
   position: fixed;
-  bottom: 20px;
+  bottom: 100px;
   right: 30px;
   z-index: 99;
   border: none;
@@ -39,6 +59,7 @@
   padding: 15px;
   border-radius: 10px;
   font-size: 18px;
+  width: 15%;
 }
 
 #myBtn:hover {
