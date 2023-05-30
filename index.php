@@ -15,7 +15,7 @@
             <a href="index.php" class="me-3">
                 <img src="https://via.placeholder.com/75x75?text=Logo" alt="Logo" class="logo">
             </a>
-            <form action="" class="form-inline my-2 my-lg-0">
+            <form action="index.php" class="form-inline my-2 my-lg-0">
                 <div class="input-group mx-auto">
                     <input name="q" type="text" id="q" placeholder="Pesquisar país" class="form-control mx-2">
                     <button type="submit" class="btn btn-primary">Pesquisar</button>
