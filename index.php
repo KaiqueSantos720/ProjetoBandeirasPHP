@@ -19,7 +19,7 @@
                 <div class="input-group mx-auto">
                     <input name="q" type="text" id="q" placeholder="Pesquisar país" class="form-control mx-2">
                     <button type="submit" class="btn btn-primary">Pesquisar</button>
-                    <button type="reset" class="btn btn-secondary bg-danger mx-2">Cancelar</button>
+                    <a href="index.php" class="btn btn-secondary bg-danger mx-2">Cancelar</a>
                 </div>
             </form>
         </div>
@@ -28,70 +28,108 @@
         <h1 id="text-principal">Lista de Países</h1>
         <div class="row col-12 justify-content-start">
             <?php
-                class Exibir
-                {
+                class Database {
+                    private $pdo;
+                
+                    public function __construct() {
+                        $this->pdo = include('conexao.php');
+                    }
+                
+                    public function query($sql, $params = []) {
+                        $stmt = $this->pdo->prepare($sql);
+                        $stmt->execute($params);
+                        return $stmt->fetchAll();
+                    }
+                }
+                
+                abstract class Entity {
+                    protected $data;
+                
+                    public function __construct(array $data = []) {
+                        $this->data = $data;
+                    }
+                
+                    public function __get($property) {
+                        return $this->data[$property] ?? null;
+                    }
+                }
+                
+                //No projeto não há uma aplicação concreta de herança, usamos nessa classe apenas para atender os requisitos pedidos pelo professor na tarefa.
+                class Country extends Entity {
+                    public function imageUrl() {
+                        return $this->UrlImagem;
+                    }
+                
+                    public function name() {
+                        return $this->Nome;
+                    }
+
+                    public function getData() {
+                        return $this->data;
+                    }
+                }
+                
+                class CountryRepository {
                     private $db;
-        
-                    public function __construct()
-                    {
-                        $this->db = include('conexao.php');
+                
+                    public function __construct(Database $db) {
+                        $this->db = $db;
                     }
-        
-                    public function listarPaises($filtro = '')
-                    {
-                        try {
-                            $sql = 'SELECT * FROM paises';
-                            if (!empty($filtro)) {
-                                $filtro = $this->db->quote("%$filtro%");
-                                $sql .= " WHERE Nome LIKE $filtro";
-                            }
-                            $sql .= ' ORDER BY Nome ASC';
-        
-                            $consulta = $this->db->query($sql);
-                            $paises = $consulta->fetchAll();
-        
-                            return $paises;
-                        } catch (\Throwable $th) {
-                            echo $th;
+                
+                    public function findAll($filter = '') {
+                        $sql = 'SELECT * FROM paises';
+                        $params = [];
+                
+                        if ($filter) {
+                            $sql .= ' WHERE Nome LIKE ?';
+                            $params[] = "%$filter%";
                         }
-        
-                        return [];
+                
+                        $sql .= ' ORDER BY Nome ASC';
+                        $rows = $this->db->query($sql, $params);
+                
+                        return array_map(function($row) {
+                            return new Country($row);
+                        }, $rows);
                     }
-        
-                    public function exibirPaises($paises)
-                    {
-                        foreach ($paises as $pais) {
+                }
+                
+                class CountryDisplay {
+                    public function render(array $countries) {
+                        foreach ($countries as $country) {
                             echo "<div class='col-md-3 mb-4'>";
                             echo "<div class='card cards text-center'>";
-                            echo "<img class='card-img-top' src='" . $pais["UrlImagem"] . "' alt='Card image'>";
+                            echo "<img class='card-img-top' src='" . $country->imageUrl() . "' alt='Card image'>";
                             echo "<div class='card-body text-light'>";
-                            echo "<h5 class='card-title'>" . $pais["Nome"] . "</h5>";
-                            echo "<a href='show.php?" . http_build_query($pais) . "' class='btn btn-primary'>Ver mais</a>";
+                            echo "<h5 class='card-title'>" . $country->name() . "</h5>";
+                            echo "<a href='show.php?" . http_build_query($country->getData()) . "' class='btn btn-primary'>Ver mais</a>";
                             echo "</div>";
                             echo "</div>";
                             echo "</div>";
                         }
                     }
                 }
-        
-                $exibir = new Exibir();
-        
-                if (!isset($_GET['q']) || isset($_GET['reset'])) {
-                    $paises = $exibir->listarPaises();
+                
+                $db = new Database();
+                $countryRepo = new CountryRepository($db);
+                $display = new CountryDisplay();
+                
+                if (!isset($_GET['q'])) {
+                    $countries = $countryRepo->findAll();
                 } else {
-                    $pesquisa = trim($_GET['q']);
-                    if ($pesquisa === '') {
-                        echo "Digite algo na barra de pesquisa";
-                        $paises = [];
+                    $search = trim($_GET['q']);
+                    if (empty($search)) {
+                        echo "<p>Por favor, insira algo na barra de pesquisa.</p>";
+                        $countries = [];
                     } else {
-                        $paises = $exibir->listarPaises($pesquisa);
-                        if (count($paises) === 0) {
+                        $countries = $countryRepo->findAll($search);
+                        if (count($countries) === 0) {
                             echo "<p>Nenhum resultado encontrado</p>";
                         }
                     }
                 }
-        
-                $exibir->exibirPaises($paises);
+                
+                $display->render($countries);
             ?>
         </div>
     </div>
