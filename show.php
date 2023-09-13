@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
     <link href="css/index.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/a076d05399.js"></script>
-    <title><?php echo $_GET['Nome'] ?></title>
+    <title>Dados do País</title>
 </head>
 <body class="bg-dark text-light">
     <header class="bg-dark shadow">
@@ -26,38 +26,64 @@
         </div>
     </header>
 
+    <!-- Como o código não foi testado com uma API real pode haver pequenos erros -->
     <?php
-        function filterInput($input) {
-            return htmlspecialchars(strip_tags(trim($input)));
+        class Country {
+            protected $data;
+            
+            public function __construct(array $data = []) {
+                $this->data = $data;
+            }
+        
+            public function __get($property) {
+                return $this->data[$property] ?? null;
+            }
+        }
+        
+        if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+            die("O ID do país não foi fornecido corretamente.");
+        }
+        
+        $countryId = intval($_GET['id']);
+        
+        $url = 'api' . $countryId; # substituir pelo link real da API para exibir dados do país
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            die("Erro ao buscar informações. Tente novamente mais tarde.");
         }
 
-        $urlImagem = filterInput($_GET['UrlImagem']);
-        $nome = filterInput($_GET['Nome']);
-        $capital = filterInput($_GET['Capital']);
-        $lingua = filterInput($_GET['Lingua']);
-        $moeda = filterInput($_GET['Moeda']);
-        $populacao = filterInput($_GET['Populacao']);
-        $continente = filterInput($_GET['Continente']);
-        $idh = filterInput($_GET['Idh']);
+        $countryData = json_decode($response);
+
+        if (!$countryData) {
+            die("País não encontrado.");
+        }
+        
+        $country = new Country((array) $countryData);
     ?>
 
     <div class="container mt-5 mb-5">
         <div class="card bg-dark text-light d-flex justify-content-center align-items-center border-0">
             <div class="row no-gutters d-flex flex-column align-items-center p-3 border border-white rounded-3">
                 <div class="col-md-4 d-flex align-items-center p-2 gap-3 flex-column">
-                    <img src="<?php echo $urlImagem; ?>" class="card-img" alt="<?php echo $nome; ?>">
-                    <h5 class="card-title"><?php echo $nome; ?></h5>
+                    <img src="<?php echo $country->UrlImagem; ?>" class="card-img" alt="<?php echo $country->Nome; ?>">
+                    <h5 class="card-title"><?php echo $country->Nome; ?></h5>
                 </div>
                 <div class="col-md-8 d-flex">
                     <div class="card-body">
-                        <p class="card-text"><strong>Capital:</strong> <?php echo $capital; ?></p>
-                        <p class="card-text"><strong>Lingua:</strong> <?php echo $lingua; ?></p>
-                        <p class="card-text"><strong>Moeda:</strong> <?php echo $moeda; ?></p>
+                        <p class="card-text"><strong>Capital:</strong> <?php echo $country->Capital; ?></p>
+                        <p class="card-text"><strong>Lingua:</strong> <?php echo $country->Lingua; ?></p>
+                        <p class="card-text"><strong>Moeda:</strong> <?php echo $country->Moeda; ?></p>
                     </div>
                     <div class="card-body">
-                        <p class="card-text"><strong>População:</strong> <?php echo $populacao; ?></p>
-                        <p class="card-text"><strong>Continente:</strong> <?php echo $continente; ?></p>
-                        <p class="card-text"><strong>IDH:</strong> <?php echo $idh; ?></p>
+                        <p class="card-text"><strong>População:</strong> <?php echo $country->Populacao; ?></p>
+                        <p class="card-text"><strong>Continente:</strong> <?php echo $country->Continente; ?></p>
+                        <p class="card-text"><strong>IDH:</strong> <?php echo $country->Idh; ?></p>
                     </div>
                 </div>
             </div>

@@ -24,27 +24,14 @@
             </form>
         </div>
     </header>
+    <!-- Como o código não foi testado com uma API real pode haver pequenos erros -->
     <div class="container py-5">
         <h1 id="text-principal">Lista de Países</h1>
         <div class="row col-12 justify-content-start">
             <?php
-                class Database {
-                    private $pdo;
-                
-                    public function __construct() {
-                        $this->pdo = include('conexao.php');
-                    }
-                
-                    public function query($sql, $params = []) {
-                        $stmt = $this->pdo->prepare($sql);
-                        $stmt->execute($params);
-                        return $stmt->fetchAll();
-                    }
-                }
-                
-                abstract class Entity {
+                class Country {
                     protected $data;
-                
+                    
                     public function __construct(array $data = []) {
                         $this->data = $data;
                     }
@@ -54,55 +41,17 @@
                     }
                 }
                 
-                //No projeto não há uma aplicação concreta de herança, usamos nessa classe apenas para atender os requisitos pedidos pelo professor na tarefa.
-                class Country extends Entity {
-                    public function imageUrl() {
-                        return $this->UrlImagem;
-                    }
-                
-                    public function name() {
-                        return $this->Nome;
-                    }
-
-                    public function getData() {
-                        return $this->data;
-                    }
-                }
-                
-                class CountryRepository {
-                    private $db;
-                
-                    public function __construct(Database $db) {
-                        $this->db = $db;
-                    }
-                
-                    public function findAll($filter = '') {
-                        $sql = 'SELECT * FROM paises';
-                        $params = [];
-                
-                        if ($filter) {
-                            $sql .= ' WHERE Nome LIKE ?';
-                            $params[] = "%$filter%";
-                        }
-                
-                        $sql .= ' ORDER BY Nome ASC';
-                        $rows = $this->db->query($sql, $params);
-                
-                        return array_map(function($row) {
-                            return new Country($row);
-                        }, $rows);
-                    }
-                }
-                
                 class CountryDisplay {
-                    public function render(array $countries) {
-                        foreach ($countries as $country) {
+                    public function render(array $countriesData) {
+                        foreach ($countriesData as $data) {
+                            $country = new Country((array) $data);
+                            
                             echo "<div class='col-md-3 mb-4'>";
                             echo "<div class='card cards text-center'>";
-                            echo "<img class='card-img-top' src='" . $country->imageUrl() . "' alt='Card image'>";
+                            echo "<img class='card-img-top' src='" . $country->UrlImagem . "' alt='Card image'>";
                             echo "<div class='card-body text-light'>";
-                            echo "<h5 class='card-title'>" . $country->name() . "</h5>";
-                            echo "<a href='show.php?" . http_build_query($country->getData()) . "' class='btn btn-primary'>Ver mais</a>";
+                            echo "<h5 class='card-title'>" . $country->Nome . "</h5>";
+                            echo "<a href='show.php?id=" . $country->ID . "' class='btn btn-primary'>Ver mais</a>";
                             echo "</div>";
                             echo "</div>";
                             echo "</div>";
@@ -110,26 +59,39 @@
                     }
                 }
                 
-                $db = new Database();
-                $countryRepo = new CountryRepository($db);
                 $display = new CountryDisplay();
                 
-                if (!isset($_GET['q'])) {
-                    $countries = $countryRepo->findAll();
-                } else {
+                $url = 'api'; # substituir pelo link da API para exibir nome e imagem de todos os países presentes no banco
+                
+                if (isset($_GET['q'])) {
                     $search = trim($_GET['q']);
+                    
                     if (empty($search)) {
-                        echo "<p>Por favor, insira algo na barra de pesquisa.</p>";
-                        $countries = [];
-                    } else {
-                        $countries = $countryRepo->findAll($search);
-                        if (count($countries) === 0) {
-                            echo "<p>Nenhum resultado encontrado</p>";
-                        }
+                        echo "<p>Por favor, insira um termo de pesquisa válido.</p>";
+                        exit;
                     }
+                    
+                    $url .= '?q=' . urlencode($search);
                 }
                 
-                $display->render($countries);
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                $response = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                
+                if ($httpCode !== 200) {
+                    echo "<p>Erro ao buscar informações. Tente novamente mais tarde.</p>";
+                    exit;
+                }
+                
+                $countriesData = json_decode($response);
+                
+                if (empty($countriesData)) {
+                    echo "<p>Nenhum resultado encontrado</p>";
+                } else {
+                    $display->render($countriesData);
+                }
             ?>
         </div>
     </div>
